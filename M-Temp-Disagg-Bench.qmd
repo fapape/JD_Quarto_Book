@@ -1,6 +1,6 @@
-# Temporal disaggregation and benchmarking {.unnumbered #m-bench}
+#  Temporal disaggregation and benchmarking {.unnumbered}
 
-Up coming content 
+Under construction
 
 ## Benchmarking Underlying Theory
 
@@ -10,28 +10,15 @@ Benchmarking[^m-temp-disagg-bench-1] is a procedure widely used when for the sam
 
 Benchmarking also occurs in the context of seasonal adjustment. Seasonal adjustment causes discrepancies between the annual totals of the seasonally unadjusted (raw) and the corresponding annual totals of the seasonally adjusted series. Therefore, seasonally adjusted series are benchmarked to the annual totals of the raw time series[^m-temp-disagg-bench-2]. Therefore, in such a case benchmarking means the procedure that ensures the consistency over the year between adjusted and non-seasonally adjusted data. It should be noted that the '*ESS Guidelines on Seasonal Adjustment*' (2015) do not recommend benchmarking as it introduces a bias in the seasonally adjusted data. Also the U.S. Census Bureau points out that: *Forcing the seasonal adjustment totals to be the same as the original series annual totals can degrade the quality of the seasonal adjustment, especially when the seasonal pattern is undergoing change. It is not natural if trading day adjustment is performed because the aggregate trading day effect over a year is variable and moderately different from zero*.[^m-temp-disagg-bench-3] Nevertheless, some users may prefer the annual totals for the seasonally adjusted series to match the annual totals for the original, non-seasonally adjusted series[^m-temp-disagg-bench-4]. According to the '*ESS Guidelines on Seasonal Adjustment*' (2015), the only benefit of this approach is that there is consistency over the year between adjusted and non-seasonally adjusted data; this can be of particular interest when low-frequency (e.g. annual) benchmarking figures officially exist (e.g. National Accounts, Balance of Payments, External Trade, etc.) where user needs for time consistency are stronger.
 
+[^m-temp-disagg-bench-2]: DAGUM, B.E., and CHOLETTE, P.A. (2006).
 
+[^m-temp-disagg-bench-3]: '*X-12-ARIMA Reference Manual'* (2011).
+
+[^m-temp-disagg-bench-4]: HOOD, C.C.H. (2005).
 
 The benchmarking procedure in JDemetra+ is available for a single seasonally adjusted series and for an indirect seasonal adjustment of an aggregated series. In the first case, univariate benchmarking ensures consistency between the raw and seasonally adjusted series. In the second case, the multivariate benchmarking aims for consistency between the seasonally adjusted aggregate and its seasonally adjusted components.
 
-Given a set of initial time series $$\left\{ z_{i,t} \right\}_{i \in I}$$, the aim of the benchmarking procedure is to find the corresponding 
-
-$$
-\left\{ x_{i,t} \right\}_{i \in I}
-$$
-
-that respect temporal aggregation constraints, represented by $X_{i,T} = \sum_{t \in T}^{}x_{i,t}$ and contemporaneous constraints given by 
-
-$$
-q_{k,t} = \sum_{j \in J_{k}}^{}{w_{\text{kj}}x_{j,t}}
-$$
-
-or, in matrix form:
-
-$$
-q_{k,t} = w_{k}x_{t}
-$$
-.
+Given a set of initial time series $$\left\{ z_{i,t} \right\}_{i \in I}$$, the aim of the benchmarking procedure is to find the corresponding $$\left\{ x_{i,t} \right\}_{i \in I}$$ that respect temporal aggregation constraints, represented by $$X_{i,T} = \sum_{t \in T}^{}x_{i,t}$$ and contemporaneous constraints given by $$q_{k,t} = \sum_{j \in J_{k}}^{}{w_{\text{kj}}x_{j,t}}$$ or, in matrix form: $$q_{k,t} = w_{k}x_{t}$$.
 
 The underlying benchmarking method implemented in JDemetra+ is an extension of Cholette's[^m-temp-disagg-bench-5] method, which generalises, amongst others, the additive and the multiplicative Denton procedure as well as simple proportional benchmarking.
 
@@ -46,3 +33,67 @@ The JDemetra+ solution uses the following routines that are described in DURBIN,
 The performance of the resulting algorithm is highly dependent on the number of variables involved in the model ($\propto \ n^{3}$). The other components of the problem (number of constraints, frequency of the series, and length of the series) are much less important ($\propto \ n$).
 
 From a theoretical point of view, it should be noted that this approach may handle any set of linear restrictions (equalities), endogenous (between variables) or exogenous (related to external values), provided that they don't contain incompatible equations. The restrictions can also be relaxed for any period by considering their "observation" as missing. However, in practice, it appears that several kinds of contemporaneous constraints yield unstable results. This is more especially true for constraints that contain differences (which is the case for non-binding constraints). The use of a special square root initializer improves in a significant way the stability of the algorithm.
+
+Temporal disaggregation is a process by means of which a high frequency time series is obtained from its low frequency observations and, possibly, some additional information, such as a related high frequency time series.
+
+Benchmarking is a process used to try and improve the quality of an observed high frequency time series using some related (usually low frequency) information.
+
+From these definitions we can see the different nature of both processes: while in temporal disaggregation the time series of interest is observed in low frequency, in benchmarking it is observed in high frequency. For this reason, the implementation of temporal disaggregation is usually subject to more difficulties than that of benchmarking.
+
+By low and high frequency we may refer, for example, to a time series observed yearly or quarterly (in low frequency) that we try to estimate for each month (in high frequency), or to a time series observed yearly that we try to estimate for each quarter.
+
+There are several types of temporal disaggregation methods. We will classify them according to two criteria, their deterministic or stochastic nature and whether they use any related time series or not.
+
+In temporal disaggregation, we use $s$ as low frequency time index variable and $t$ as high frequency time index variable. So, $y_s$ is the observed low frequency time series of interest, $y_t$ is the desired, but not observed, high frequency time series of interest, while $z_s$ and $z_t$ are the corresponding auxiliary time series, where, usually, $z_t$ is observed and $z_s$ is computed from $z_t$. The objective is to compute the estimates $\hat y_t$.
+
+In benchmarking the notation is similar, but now $y_t$ is observed. The purpose is to calibrate it using $z_s$ or $z_t$ (whichever is available). The calibrated values are the $\hat y_t$.
+
+## Deterministic Methods
+
+We now briefly describe some of the deterministic methods used for temporal disaggregation and benchmarking.
+
+### Pro-rata
+
+For temporal disaggregation, if we have $y_s$ and $z_t$, we first compute $z_s$ and then $\hat y_t=y_s\tfrac{z_t}{z_s}$ (we pro-rate $y$ proportionally to $z$).
+
+For benchmarking, if we have $y_t$ and $z_s$, we first compute $y_s$ and then $\hat y_t=z_ s\tfrac{y_t}{y_s}$ (we pro-rate $z_s$ with the ratios $y_t/y_s$). 
+
+The advantage of this method is that it is simple to use, but there are some other methods which have more desirable properties.
+
+### Denton
+
+The Denton method[^m-temp-disagg-bench-6] was designed to preserve the movement of the indicator in the benchamrked or disaggregated series.
+
+[^m-temp-disagg-bench-6]: Denton(1971). Adjustment of Monthly or Quarterly Series to Annual Totals: An Approach Based on Quadratic Minimization. Journal of the American Statistical Association, 66(333):99-102, 1971. 
+
+For benchmarking assume that we observe $Y=(y_1,\cdots,y_T)^T$ and that we have a set of $r<T$ linear constraints on the benchmarked values 
+ $\hat Y=(\hat y_1,\cdots,\hat y_T)^T$ of the form
+\begin{equation*}
+C\hat Y = d,\quad \text{ that is }
+\begin{pmatrix}C_{11}&\cdots& C_{1T}\\\cdots&\cdots&\cdots\\C_{r1}&\cdots& C_{rT} \end{pmatrix}
+\begin{pmatrix}\hat y_1\\\cdots\\\hat y_T \end{pmatrix} = 
+\begin{pmatrix}d_1\\\cdots\\d_r, \end{pmatrix}
+\end{equation*} 
+
+For example, the $y_i$ values could be monthly values, the $c_{i,j}$ could be all zeros and ones (twelve consecutive ones in each row) and the $d_j$ could be accurate annual totals obtained from an external source of information. So, the restrictions would mean that we know more exact annual totals than the annual totals obtained by summing the $y_i$, and we require that the annual sums of the benchmarked $\hat y_i$ match those $d_j$. 
+
+There are several variations of the Denton method. The additive first differences Denton method tries, after taking regular differences once, to preserve the movement of the $y_t$ in the benchmarked values $\hat y_t$. Exactly it minimizes
+\begin{equation}\label{Das1}
+\min_{\hat y_t} \sum_{j=2}^T [(\hat y_t - y_t)- (\hat y_{t-1} - y_{t-1})]^2, \text{ subject to } C\hat Y = d,
+\end{equation}
+where $(\hat y_t - y_t)- (\hat y_{t-1} - y_{t-1})=\hat z_t -z_t$ and $z_t=y_t-y_{t-1}$ are the first regular differences of the $y_t$.
+
+The proportional first differences Denton method is similar, but it assumes that the short term fluctuations, such as seasonal and irregular, have a multiplicative effect, instead of additive. It minimizes:
+\begin{equation}\label{Deps1}
+ \min_{\hat y_t} \sum_{j=2}^T \left[\frac{\hat y_t}{y_t}- \frac{\hat y_{t-1}}{y_{t-1}}\right]^2 , \text{ subject to } C\hat Y = d,
+\end{equation}
+
+The additive and proportional second differences Denton methods are also frequently used and are similar to the first differences ones, but taking two regular differences instead of one.
+
+There exist also some multivariate Denton methods. In them, several time series are benchmarked or disaggregated, each one with its own restrictions but, additionally, there are also some new restrictions that simultaneously involve two or more of the time series at some fixed time points. The optimization has a single objective function in which all the time series are included, and a different weight can be assigned to each series.
+
+
+
+
+
+
